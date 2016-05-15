@@ -7,21 +7,77 @@ defmodule Snaqshot.Client do
   @access_key Application.get_env(:snaqshot, :access_key)
   @zone Application.get_env(:snaqshot, :zone)
 
-  def describe_snapshots(params \\ %{}) do
-    get("DescribeSnapshots", params)
+  @doc """
+  Get snaqshot descriptions.
+
+  https://docs.qingcloud.com/api/snapshot/describe_snapshots.html
+  """
+  def describe_snapshots(params \\ %{}, opts \\ []) do
+    get("DescribeSnapshots", params, opts)
+  end
+
+  @doc """
+  Create snapshots.
+
+  ## Required params
+
+  * `resources`: The resources list for backup.
+
+  ## Optional params
+
+  * `snapshot_name`: The snapshot name.
+  * `is_full`: Full or incremental backup. `true` for full backup, `false`
+  otherwise.
+
+  ## Example
+
+      Snaqshot.Client.create_snapshots(%{resources: ["i-15ka", "vol-k9r"]})
+
+  ## References
+
+  https://docs.qingcloud.com/api/snapshot/create_snapshots.html
+  """
+  def create_snapshots(params \\ %{}, opts \\ []) do
+    key_and_types = [{:resources, :list}, {:is_full, :boolean}]
+    get("CreateSnapshots", normalize_params(params, key_and_types), opts)
   end
 
   def base_path do
     @base_path
   end
 
-  defp get(action, params \\ %{}) do
+  defp get(action, params, opts \\ []) do
+    dry_run = Keyword.get(opts, :dry_run, false)
     query = params |> Map.put(:action, action) |> pack_into_query
     uri = @base <> "?" <> query
-    case HTTPoison.get(uri) do
-      {:ok, %{body: body}} -> normalize_json(body)
-      {:error, reason}     -> {:error, :http, reason}
+    if dry_run do
+      {:dry_run, uri}
+    else
+      case HTTPoison.get(uri) do
+        {:ok, %{body: body}} -> normalize_json(body)
+        {:error, reason}     -> {:error, :http, reason}
+      end
     end
+  end
+
+  defp normalize_params(params, key_and_types) do
+    Enum.reduce(key_and_types, params, fn {key, type}, acc ->
+      {val, new_acc} = Map.pop(acc, key)
+      if is_nil(val) do
+        new_acc
+      else
+        Map.merge(new_acc, convert_to_params(type, key, val))
+      end
+    end)
+  end
+
+  defp convert_to_params(:boolean, k, true),  do: %{k => 1}
+  defp convert_to_params(:boolean, k, false), do: %{k => 0}
+  defp convert_to_params(:list, resource_name, list) do
+    1..Enum.count(list)
+    |> Enum.map(& "#{resource_name}.#{&1}")
+    |> Enum.zip(list)
+    |> Map.new
   end
 
   defp normalize_json(json) do
