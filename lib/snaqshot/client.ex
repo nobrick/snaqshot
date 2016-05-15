@@ -44,6 +44,18 @@ defmodule Snaqshot.Client do
 
   @doc """
   Delete snapshots.
+
+  ## Required params
+
+  * `snapshots`: The ID list of snapshots to delete.
+
+  ## Example
+
+      Snaqshot.Client.delete_snapshots(%{snapshots: ~w(ss-88hr2kri)})
+
+  ## References
+
+  https://docs.qingcloud.com/api/snapshot/delete_snapshots.html
   """
   def delete_snapshots(params \\ %{}, opts \\ []) do
     key_and_types = [{:snapshots, :list}]
