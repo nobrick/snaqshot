@@ -42,6 +42,14 @@ defmodule Snaqshot.Client do
     get("CreateSnapshots", normalize_params(params, key_and_types), opts)
   end
 
+  @doc """
+  Delete snapshots.
+  """
+  def delete_snapshots(params \\ %{}, opts \\ []) do
+    key_and_types = [{:snapshots, :list}]
+    get("DeleteSnapshots", normalize_params(params, key_and_types), opts)
+  end
+
   def base_path do
     @base_path
   end
