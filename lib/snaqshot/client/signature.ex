@@ -5,17 +5,27 @@ defmodule Snaqshot.Client.Signature do
 
   @secret_key Application.get_env(:snaqshot, :secret_key)
 
-  def with_signature(params, opts \\ []) do
-    hash = %{signature_method: "HmacSHA256", signature_version: 1}
-    params = Map.merge(params, hash)
-    Map.put(params, :signature, params |> to_query |> sign(opts))
+  def sign_into_query(params, opts \\ []) do
+    query = to_query(params)
+    signature = sign(query, opts)
+    "#{query}&signature=#{signature}"
   end
 
-  def sign(query, opts \\ []) do
+  def sign(params, opts \\ [])
+
+  def sign(params, opts) when is_map(params) do
+    sign(to_query(params), opts)
+  end
+
+  def sign(query, opts) when is_binary(query) do
     method = Keyword.get(opts, :req_method, "GET")
     path   = Keyword.get(opts, :base_path, Client.base_path)
     secret_key = Keyword.get(opts, :secret_key, @secret_key)
     "#{method}\n#{path}\n#{query}" |> hmac(secret_key)
+  end
+
+  defp with_signature_attrs(params) do
+    Map.merge(params, %{signature_method: "HmacSHA256", signature_version: 1})
   end
 
   defp hmac(str, key, type \\ :sha256) do
@@ -26,6 +36,7 @@ defmodule Snaqshot.Client.Signature do
 
   defp to_query(params) do
     params
+    |> with_signature_attrs
     |> Enum.sort_by(& to_string(elem &1, 0))
     |> encode_query
   end

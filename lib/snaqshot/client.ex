@@ -1,5 +1,5 @@
 defmodule Snaqshot.Client do
-  import Snaqshot.Client.Signature, only: [with_signature: 1]
+  import Snaqshot.Client.Signature, only: [sign_into_query: 1]
   alias Calendar.DateTime
 
   @base Application.get_env(:snaqshot, :base_uri)
@@ -7,24 +7,38 @@ defmodule Snaqshot.Client do
   @access_key Application.get_env(:snaqshot, :access_key)
   @zone Application.get_env(:snaqshot, :zone)
 
-  def describe_snapshots do
+  def describe_snapshots(params \\ %{}) do
+    get("DescribeSnapshots", params)
   end
 
   def base_path do
     @base_path
   end
 
-  def get(%{action: _action} = params) do
-    pack_params(params)
+  defp get(action, params \\ %{}) do
+    query = params |> Map.put(:action, action) |> pack_into_query
+    uri = @base <> "?" <> query
+    case HTTPoison.get(uri) do
+      {:ok, %{body: body}} -> normalize_json(body)
+      {:error, reason}     -> {:error, :http, reason}
+    end
   end
 
-  defp pack_params(params) do
+  defp normalize_json(json) do
+    result = Poison.Parser.parse!(json)
+    case result do
+      %{"ret_code" => 0} -> {:ok, result}
+      _                  -> {:error, :status, result}
+    end
+  end
+
+  defp pack_into_query(params) do
     params
     |> with_timestamp
     |> with_access_key
     |> with_version
     |> with_zone
-    |> with_signature
+    |> sign_into_query
   end
 
   defp with_timestamp(params) do
