@@ -10,10 +10,19 @@ defmodule Snaqshot.Client do
   @doc """
   Get snaqshot descriptions.
 
+  ## Optional params
+
+  * `status`: Snaqshot statuses for filtering, accepting a list with
+  allowed values: `pending`, `available`, `suspended`, `deleted`, `ceased`.
+  * `tags`: Tags for filtering. Returns only the snaqshots that bind the tags.
+  * `resource_id`: The resource id for filtering.
+  * `verbose`: `true` for verbose mode, `false` otherwise.
+
   https://docs.qingcloud.com/api/snapshot/describe_snapshots.html
   """
   def describe_snapshots(params \\ %{}, opts \\ []) do
-    get("DescribeSnapshots", params, opts)
+    keys = [{:status, :list}, {:tags, :list}, {:verbose, :boolean}]
+    get("DescribeSnapshots", normalize_params(params, keys), opts)
   end
 
   @doc """
@@ -38,8 +47,8 @@ defmodule Snaqshot.Client do
   https://docs.qingcloud.com/api/snapshot/create_snapshots.html
   """
   def create_snapshots(params \\ %{}, opts \\ []) do
-    key_and_types = [{:resources, :list}, {:is_full, :boolean}]
-    get("CreateSnapshots", normalize_params(params, key_and_types), opts)
+    keys = [{:resources, :list}, {:is_full, :boolean}]
+    get("CreateSnapshots", normalize_params(params, keys), opts)
   end
 
   @doc """
@@ -58,8 +67,8 @@ defmodule Snaqshot.Client do
   https://docs.qingcloud.com/api/snapshot/delete_snapshots.html
   """
   def delete_snapshots(params \\ %{}, opts \\ []) do
-    key_and_types = [{:snapshots, :list}]
-    get("DeleteSnapshots", normalize_params(params, key_and_types), opts)
+    keys = [{:snapshots, :list}]
+    get("DeleteSnapshots", normalize_params(params, keys), opts)
   end
 
   def base_path do

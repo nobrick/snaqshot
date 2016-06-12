@@ -1,5 +1,5 @@
 defmodule Snaqshot.ClientTest do
-  import Snaqshot.Client, only: [describe_snapshots: 0, create_snapshots: 2,
+  import Snaqshot.Client, only: [describe_snapshots: 2, create_snapshots: 2,
                                  delete_snapshots: 2]
   use ExUnit.Case, async: true
 
@@ -13,7 +13,7 @@ defmodule Snaqshot.ClientTest do
   end
 
   test "#describe_snapshots" do
-    assert {:ok, %{"ret_code" => _, "snapshot_set" => _}} = describe_snapshots
+    assert {:ok, %{"ret_code" => _, "snapshot_set" => _}} = describe_snapshots(%{status: ~w(available)}, [])
   end
 
   test "#create_snapshots", %{params: params_mock} do
