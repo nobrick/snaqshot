@@ -35,8 +35,8 @@ defmodule Snaqshot.Client do
   ## Optional params
 
   * `snapshot_name`: The snapshot name.
-  * `is_full`: Full or incremental backup. `true` for full backup, `false`
-  otherwise.
+  * `is_full`: Full or incremental backup. `true` for full backup, `false` for
+  allowing decisions made by remote server.
 
   ## Example
 
