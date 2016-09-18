@@ -32,6 +32,8 @@ defmodule Snaqshot.Mixfile do
      {:poison, "~> 2.0"},
      {:httpoison, "~> 0.8.0"},
      {:quantum, ">= 1.7.1"},
+     {:slack, "~> 0.7.0"},
+     {:websocket_client, git: "https://github.com/jeremyong/websocket_client"},
      {:distillery, git: "https://github.com/bitwalker/distillery.git"}]
   end
 end
