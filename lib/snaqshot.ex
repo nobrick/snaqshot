@@ -1,19 +1,16 @@
 defmodule Snaqshot do
   use Application
 
-  # See http://elixir-lang.org/docs/stable/elixir/Application.html
-  # for more information on OTP Applications
+  @slack_token Application.get_env(:slack, :api_token)
+
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
     children = [
-      # Define workers and child supervisors to be supervised
-      # worker(Snaqshot.Worker, [arg1, arg2, arg3]),
+      worker(SlackMessaging, [@slack_token]),
       supervisor(Snaqshot.BackupWorker.Supervisor, [])
     ]
 
-    # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Snaqshot.Supervisor]
     Supervisor.start_link(children, opts)
   end

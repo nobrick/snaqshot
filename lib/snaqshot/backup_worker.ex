@@ -2,6 +2,7 @@ defmodule Snaqshot.BackupWorker do
   use GenServer
   import Snaqshot.Client, only: [create_snapshots: 2]
   import Logger, only: [debug: 1]
+  defdelegate post_to_slack(msg), to: SlackMessaging, as: :post
 
   @resources Application.get_env(:snaqshot, :workers)
              |> Keyword.get(:resources)
@@ -32,9 +33,12 @@ defmodule Snaqshot.BackupWorker do
       {:dry_run, _} = ret ->
         ret
       {:ok, ret} ->
+        post_to_slack(inspect(ret))
         handle_resp(:ok, ret)
       {:error, :status, %{"ret_code" => 1400}} = err ->
-        Logger.error(inspect(err))
+        err_str = inspect(err)
+        post_to_slack(err_str)
+        Logger.error(err_str)
     end
   end
 
